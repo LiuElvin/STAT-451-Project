@@ -1,3 +1,3 @@
-# STAT-451-Project
+# STAT 451 Final Project
 
 Tentative summary.
