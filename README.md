@@ -2,10 +2,7 @@
 
 ## Group Members:
 
-**Vy Nguyen
-Jennie Jeon
-Minh Tran
-Elvin Liu**
+**Vy Nguyen, Jennie Jeon, Minh Tran, Elvin Liu**
 
 
 For this project, we aim to explore chronic disease trends across various demographics and regions in the U.S. over recent years, focusing on how specific health indicators—both chronic disease indicators and broader health metrics like physical and mental health—are changing over time. The main research question guiding our work is: How do chronic disease indicators, alongside other health metrics, vary across regions over time, and what factors might be driving these changes? By creating visual representations of these trends, we hope to highlight disparities across different regions and assess the impact of regional health initiatives. We plan to focus on indicators with significant fluctuations or connections to high mortality rates, as these could signal key public health issues. This approach will allow us to capture critical trends and assess whether current public health initiatives are successfully promoting overall health across communities.
