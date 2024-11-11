@@ -19,11 +19,10 @@ The answer this graph is answering is how much has alcohol consumption increased
 
 How many mentally unhealthy days do Americans aged >= 18 experience, by race and ethnicity? By taking the average across all states by race and ethnicity, we can observe the average trend in the quality of mental health of an average American from 2011 to 2021. While there is a slight increase and decrease in the number of mentally unhealthy days, the overall trend is that Americans are experiencing more mentally unhealthy days over the last decade. It is also important to note that multiracial groups, on average, experience many more mentally unhealthy days than the specific ethnicities; this might be due to the nature of diversity in America. It is safe to assume that no matter the demographic, Americans are experiencing a decline in mental health. 
 
+## Graph 3
 <p align="center">
   <img src="./graph_2_part_1.png" width="45%"/>
   <img src="./graph_2_part_2.png" width="45%"/>
 </p>
 
-The related graphs above address the question of "is there connection between state regulation of alcohol and liver disease mortality rate." From the graphs, we can see a fairly strong inverse correlation (higher regulated states usually have lower rates of liver disease mortality) however it isn't entirely apparent.
-
-## Graph 3
+The related graphs above address the question of "is there connection between state regulation of alcohol and liver disease mortality rate." From the graphs, we can see a fairly strong inverse correlation (higher regulated states usually have lower rates of liver disease mortality) however it isn't exactly 1 to 1. We can see certain states like Washington with the highest level of regulation and decent levels of liver disease deaths. On the flip side you also states like Wisconsin with extremely few regulations and a middling amount of deaths. There does appear to be some level of correlation, but it isn't a lot.
