@@ -16,4 +16,9 @@ The answer this graph is answering is how much has alcohol consumption increased
 
 ## Graph 2
 
+<p align="center">
+  <img src="./graph_2_part_1.png" width="45%"/>
+  <img src="./graph_2_part_2.png" width="45%"/>
+</p>
+
 ## Graph 3
