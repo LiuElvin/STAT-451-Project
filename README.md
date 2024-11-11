@@ -15,5 +15,8 @@ The primary dataset for this analysis is the "U.S. Chronic Disease Indicators, 2
 The answer this graph is answering is how much has alcohol consumption increased in each state from 2010 to 2020. As we can clearly see, on average the United States has increased alcohol consumption by 0.2 gallons per person. This is roughly equivalent to every person ages 14 and up drinking an extra 40 to 50 standard drinks per year - very substantial. Note that only 10 states have seen a decline in drinking over the 10 year period while drinking in Delaware has skyrocketed nearly quadruple the national average. Although there have been initiatives to reduce alcohol and drug usage, it appears there hasn't been any noticeable benefits, at least when we look at just how much alcohol consumption has increased in the timeframe inspected.
 
 ## Graph 2
+![finalproject2_graph2](https://github.com/user-attachments/assets/aa3f1f84-a1f8-4a34-97e5-40e0374bd76e)
+
+How many mentally unhealthy days do Americans aged >= 18 experience, by race and ethnicity? By taking the average across all states by race and ethnicity, we can observe the average trend in the quality of mental health of an average American from 2011 to 2021. While there is a slight increase and decrease in the number of mentally unhealthy days, the overall trend is that Americans are experiencing more mentally unhealthy days over the last decade. It is also important to note that multiracial groups, on average, experience many more mentally unhealthy days than the specific ethnicities; this might be due to the nature of diversity in America. It is safe to assume that no matter the demographic, Americans are experiencing a decline in mental health. 
 
 ## Graph 3
