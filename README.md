@@ -21,4 +21,6 @@ The answer this graph is answering is how much has alcohol consumption increased
   <img src="./graph_2_part_2.png" width="45%"/>
 </p>
 
+The related graphs above address the question of "is there connection between state regulation of alcohol and liver disease mortality rate." From the graphs, we can see a fairly strong inverse correlation (higher regulated states usually have lower rates of liver disease mortality) however it isn't entirely apparent.
+
 ## Graph 3
