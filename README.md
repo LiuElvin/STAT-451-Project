@@ -8,4 +8,12 @@ For this project, we aim to explore trends in chronic disease across various dem
 
 The primary dataset for this analysis is the "U.S. Chronic Disease Indicators, 2023 Release", which tracks 124 health indicators across the United States, offering a comprehensive view of chronic disease metrics. This dataset includes data points from diverse state and federal agencies, allowing us to capture a wide array of regional trends. To contextualize changes in these indicators, we will examine major events that may influence health trends, such as the COVID-19 pandemic, which has had a substantial impact on both physical and mental health metrics. Since the dataset generally includes annual data points, we plan to highlight a few of these major events to see how they may have caused fluctuations in specific health indicators. In addition to this main dataset, we may incorporate data from other sources for a more detailed view of certain health metrics (e.g. depression statistics), however those are fairly available (especially for major problems like mental health). Some examples would be these links to data on [nutrition and physical activity](https://catalog.data.gov/dataset/nutrition-physical-activity-and-obesity-behavioral-risk-factor-surveillance-system) and the annual reports on [mental health and drug use](https://www.samhsa.gov/data/data-we-collect/nsduh-national-survey-drug-use-and-health). If we want to draw comparisons to worldwide trends, WHO also have a large dataset for each year at the link [here](https://data.who.int/). The main dataset is quite large (350 mb), so I've provided a link to the data [here](https://catalog.data.gov/dataset/u-s-chronic-disease-indicators-cdi).
 
+## Graph 1
+
 ![](./graph_1.png)
+
+The answer this graph is answering is how much has alcohol consumption increased in each state from 2010 to 2020. As we can clearly see, on average the United States has increased alcohol consumption by 0.2 gallons per person. This is roughly equivalent to every person ages 14 and up drinking an extra 40 to 50 standard drinks per year - very substantial. Note that only 10 states have seen a decline in drinking over the 10 year period while drinking in Delaware has skyrocketed nearly quadruple the national average. Although there have been initiatives to reduce alcohol and drug usage, it appears there hasn't been any noticeable benefits, at least when we look at just how much alcohol consumption has increased in the timeframe inspected.
+
+## Graph 2
+
+## Graph 3
