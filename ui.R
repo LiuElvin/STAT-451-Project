@@ -34,10 +34,16 @@ body <- dashboardBody(
   tabItems(
     tabItem(tabName = "pcac",
             fluidRow(
-              box(title = "Alcohol Consumption Summary",
+              box(title = "Summary of Per Capita Alcohol Consumption",
+                  status = "primary", solidHeader = TRUE, width = 12,
+                  textOutput("state_norm_summary")),
+              box(width = 6, plotOutput("pcac_bar_1")),
+              box(width = 6, plotOutput("pcac_bar_2"))),
+            fluidRow(
+              box(title = "Summary of Change in Per Capita Alcohol Consumption",
                   status = "primary", solidHeader = TRUE, width = 12,
                   textOutput("state_change_summary")),
-              box(width = 12, plotOutput("pcac_plot")))
+              box(width = 12, plotOutput("pcac_comparison_bar")))
     )
   )
 )
