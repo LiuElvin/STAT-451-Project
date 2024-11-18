@@ -1,0 +1,55 @@
+library(shiny)
+library(ggplot2)
+library(dplyr)
+
+# filter data
+barplot_data <- df %>% 
+  filter(Topic %in% c("Alcohol", "Asthma", "Cancer"), StratificationCategory1 == "Gender") %>% 
+  group_by(Topic, Stratification1) %>% 
+  summarise(mean_value = mean(as.numeric(DataValue), na.rm = TRUE)) %>% 
+  ungroup()
+
+# ui part
+ui <- fluidPage(
+  titlePanel("Comparison of Alcohol, Asthma, and Cancer by Gender Across the US"),
+  fluidRow(
+    column(6,
+           h4("Select Gender"),
+           selectInput("gender", "Gender", choices = c("All", "Male", "Female"), selected = "All")),
+    column(6,
+           h4("Select Topic"),
+           selectInput("topic", "Topic", choices = c("All", "Alcohol", "Asthma", "Cancer"), selected = "All"))),
+  
+  fluidRow(
+    column(12,
+           plotOutput("barPlot"))))
+
+# Server part
+
+server <- function(input, output, session) {
+  
+  filtered_data <- reactive({
+    data <- barplot_data
+    if (input$gender != "All") {
+      data <- data %>% filter(Stratification1 == input$gender)}
+    if (input$topic != "All") {
+      data <- data %>% filter(Topic == input$topic)}
+    return(data)
+  })
+  
+# Plot
+  output$barPlot <- renderPlot({
+    ggplot(filtered_data(), aes(x = Topic, y = mean_value, fill = Stratification1)) +
+      geom_bar(stat = "identity", position = position_dodge(), width = 0.75) +
+      labs(title = "Males have higher values for Cancer and Alcohol compared to Females",
+           subtitle = paste("Gender(s):", paste(input$gender, collapse = ", "), "| Topic(s):", paste(input$topic, collapse = ", ")),
+           x = "Topic",
+           y = "Value",
+           fill = "Gender") +
+      theme_minimal() +
+      scale_fill_manual(values = c("Male" = "blue", "Female" = "hotpink")) +
+      theme(plot.subtitle = element_text(color = "#4D4D4D"),
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            panel.background = element_rect(fill = "grey95", color = NA))})
+}
+# shinyApp(ui = ui, server = server)
