@@ -1,5 +1,6 @@
 library(shinydashboard)
 library(tidyverse)
+library(plotly)
 
 # Data
 # df <- read.csv("U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
@@ -18,27 +19,40 @@ sidebar <- dashboardSidebar(
     # Tabs
     menuItem("Per Capita Alcohol Consumption",
              tabName = "pcac",
-             icon = icon("whiskey-glass")),
+             icon = icon("wine-glass")),
+    menuItem("Alcohol Use Among Youth",
+             tabName = "auay",
+             icon = icon("child")),
     menuItem("Chronic Liver Disease Mortality",
              tabName = "cldm",
              icon = icon("skull")),
-    
-    # Sidebar
-    selectInput("state", "State", 
-                choices = unique_states),
-    selectInput("year_one", "Year 1", 
-                choices = 2010:2021,
-                selected = 2010),
-    selectInput("year_two", "Year 2", 
-                choices = 2010:2021,
-                selected = 2020)
-  ),
   
-  # Conditional sidebar
-  conditionalPanel(
-    condition = "input.menu1 == 'pcac'",
-    selectInput("car2", "Select a car (Tab 2):", choices = 1:5),
-    numericInput("customCyl", "Custom Cylinders:", value = 4, min = 2, max = 8)
+    # Conditional sidebar
+    conditionalPanel(
+      condition = "input.menu1 == 'pcac'",
+      selectInput("state_1", "State", 
+                  choices = unique_states),
+      selectInput("year_one_1", "Year 1", 
+                  choices = c(2010, 2014, 2016, 2018, 2019, 2020),
+                  selected = 2010),
+      selectInput("year_two_1", "Year 2", 
+                  choices = c(2010, 2014, 2016, 2018, 2019, 2020),
+                  selected = 2020)),
+    
+    conditionalPanel(
+      condition = "input.menu1 == 'auay'",
+      selectInput("state_2", "Select State", choices = unique_states),
+      selectInput("stratification_category_2", "Select Stratification Category", choices = c("Overall", "Gender", "Race/Ethnicity"), selected = "Overall"),
+      selectInput("stratification_2", "Select Stratification", choices = NULL),
+      checkboxInput("trendline_2", "Show Trendline", value = TRUE)),
+    
+    conditionalPanel(
+      condition = "input.menu1 == 'cldm'",
+      selectInput("year_3", "Select Year", choices = c(2012, 2014, 2020), selected = 2020),
+      selectInput("data_type_3", "Select Data Type", choices = c("Age-adjusted Rate", "Crude Rate"), selected = "Crude Rate"),
+      selectInput("stratification_category_3", "Select Stratification Category", choices = c("Overall", "Gender", "Race/Ethnicity"), selected = "Overall"),
+      selectInput("stratification_3", "Select Stratification", choices = NULL),
+      checkboxInput("trendline_3", "Show Trendline", value = TRUE))
   )
 )
 
@@ -57,9 +71,17 @@ body <- dashboardBody(
                   textOutput("state_change_summary")),
               box(width = 12, plotOutput("pcac_comparison_bar")))
     ),
+    tabItem(tabName = "auay",
+            fluidRow(
+              box(width = 12, plotlyOutput("auay_scatterPlot"))
+            )
+    ),
     tabItem(tabName = "cldm",
             fluidRow(
-              
+              box(title = "Note About Categories",
+                  status = "primary", solidHeader = TRUE, width = 12,
+                  htmlOutput("cat")),
+              box(width = 12, plotlyOutput("cldm_scatterPlot"))
             )
     )
   )
