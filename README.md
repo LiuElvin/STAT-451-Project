@@ -6,6 +6,8 @@
 
 ## Project Goal
 
+For this project, we aim to explore trends in the chronic disease indicator of alcohol across various demographics and regions in the United States, focusing on how the prevalence of alcohol changes across time and for different groups of people.
+
 ---
 
 ## Initial Project Goal
