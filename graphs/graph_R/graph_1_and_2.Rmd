@@ -1,0 +1,144 @@
+---
+title: "Final_Project_Part_2"
+author: "Elvin Liu"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(tigris)
+library(viridis)
+library(sf)
+```
+
+```{r}
+df <- read.csv("U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
+
+yearly_alcohol_rate <- function(year) {
+  df %>%
+    filter(Topic == "Alcohol") %>%
+    filter(DataValueType == "Per capita alcohol consumption") %>%
+    filter(YearStart == year)
+}
+
+df_alcohol_rate_2010 <- yearly_alcohol_rate(2010)
+df_alcohol_rate_2020 <- yearly_alcohol_rate(2020)
+
+df_alcohol_rate_merge <- merge(
+  df_alcohol_rate_2010,
+  df_alcohol_rate_2020,
+  by = "LocationDesc",
+  suffixes = c("2010", "2020"))
+
+df_alcohol_rate_merge$DataValue2010 <- as.numeric(df_alcohol_rate_merge$DataValue2010)
+
+df_alcohol_rate_merge$DataValue2020 <- as.numeric(df_alcohol_rate_merge$DataValue2020)
+
+df_alcohol_rate_merge$diff <- (df_alcohol_rate_merge$DataValue2020 -
+                                df_alcohol_rate_merge$DataValue2010)
+
+df_alcohol_rate_merge_1 <- df_alcohol_rate_merge[!is.na(df_alcohol_rate_merge$diff), ]
+
+nat_avg <- filter(df_alcohol_rate_merge_1, LocationDesc == "United States")$diff
+
+df_alcohol_rate_merge_2 <- df_alcohol_rate_merge_1 %>% 
+  filter(LocationDesc != "United States") %>% 
+  filter(LocationDesc != "District of Columbia")
+
+ggplot(data = df_alcohol_rate_merge_2, mapping = aes(x = reorder(LocationDesc, diff), y = diff)) +
+  geom_bar(stat = "identity") +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_hline(yintercept = nat_avg, color = "red") +
+  geom_hline(yintercept = (2.51/535.5) * 100, color = "blue") +
+  labs(title = "Increase in per capita alcohol consumption
+from 2010 to 2020 among persons aged >= 14 years",
+       x = "State",
+       y = "Increase in Alcohol Consumption (gallons / person)") +
+  annotate("text", x = "Connecticut", y = nat_avg,
+           label = paste0("National Average Increase = ", nat_avg, " gallons per person"),
+           color = "red", angle = 0, vjust = -1) +
+  annotate("text", x = "Pennsylvania", y = (2.51/535.5) * 100,
+           label = paste0("Increase of 100 Standard Drinks = 0.4687 gallons per person"),
+           color = "blue", angle = 0, vjust = -1) +  
+  scale_y_continuous(breaks = seq(-1, 1, by = 0.2)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5))
+```
+
+```{r}
+df_no_territories_liver_disease <- df %>% 
+  filter(LocationDesc != "United States") %>% 
+  filter(LocationDesc != "District of Columbia") %>% 
+  filter(LocationDesc != "Guam") %>% 
+  filter(LocationDesc != "Puerto Rico") %>% 
+  filter(LocationDesc != "Virgin Islands") %>% 
+  filter(Question == "Chronic liver disease mortality") %>% 
+  filter(DataValueType == "Age-adjusted Rate") %>% 
+  filter(StratificationCategory1 == "Overall") %>% 
+  filter(YearStart == 2020)
+
+us_states <- states(cb = TRUE)
+
+us_states_update <- us_states %>%
+  right_join(df_no_territories_liver_disease, by = c("NAME" = "LocationDesc"))
+
+us_states_update$DataValue <- as.numeric(us_states_update$DataValue)
+
+ggplot(us_states_update) +
+  geom_sf(aes(fill = DataValue), color = "white") +
+  scale_fill_gradient(low = "yellow", high = "red2", name = "Deaths per 100,000") +
+  labs(title = "U.S. States Heatmap of Chronic Liver Disease Mortality in 2020", subtitle = "Excluding U.S. Territories") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  coord_sf(xlim = c(-125, -66), ylim = c(24, 49))
+```
+
+```{r}
+df_no_territories_alc_restrict <- df %>% 
+  filter(LocationDesc != "United States") %>% 
+  filter(LocationDesc != "District of Columbia") %>% 
+  filter(LocationDesc != "Guam") %>% 
+  filter(LocationDesc != "Puerto Rico") %>% 
+  filter(LocationDesc != "Virgin Islands") %>% 
+  filter(Question == "Local authority to regulate alcohol outlet density") %>% 
+  filter(YearStart == 2020)
+
+us_states <- states(cb = TRUE)
+
+us_states_updates <- us_states %>%
+  right_join(df_no_territories_alc_restrict, by = c("NAME" = "LocationDesc"))
+
+ggplot(us_states_updates) +
+  geom_sf(aes(fill = DataValue), color = "white") +
+  scale_fill_manual(
+    values = c("Category 1 - State had exclusive local alcohol retail licensing" = "yellow1",
+               "Category 2 - State had joint local and state alcohol retail licensing" = "yellow3",
+               "Category 3 - State had exclusive state alcohol retail licensing but with local zoning authority" = "orange1",
+               "Category 4 - State had mixed alcohol retail licensing policies" = "orange3",
+               "Category 5 - State had nearly exclusive state alcohol retail licensing" = "red1",
+               "Category 6 - State had exclusive state alcohol retail licensing" = "red4"),
+    name = "Categories"
+  ) + 
+  guides(
+    fill = guide_legend(
+      title = "Level of Regulation",
+      title.position = "top",               # Position title above the legend items
+      title.theme = element_text(size = 8), # Smaller legend title text
+      keywidth = 1,                       # Width of each color key
+      keyheight = 1,                      # Height of each color key
+      nrow = 6
+    )
+  ) +
+  theme(
+    axis.text = element_blank(),               # Remove axis text
+    axis.ticks = element_blank(),              # Remove axis ticks
+    legend.position = "bottom",                # Move legend below the plot
+    legend.text = element_text(size = 8),      # Set legend text size
+    legend.spacing.x = unit(0.1, "cm")         # Reduce spacing between legend items
+  ) +
+  labs(title = "U.S. Heatmap of Each State's Authority to Regulate Alcohol in 2020") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  coord_sf(xlim = c(-125, -66), ylim = c(24, 49))
+```
