@@ -14,14 +14,16 @@ eth <- 0.0046875
 filter_data <- function(data, year, state = NULL) {
   filtered <- data %>% 
     filter(YearStart == year, !is.na(DataValue)) 
+  
   if (!is.null(state)) {
     filtered <- filtered %>% filter(LocationDesc == state)
   }
+  
   return(filtered)
 }
 
 function(input, output, session) {
-  # Code for 1st tab
+  # Code for pcac tab
   pcac_full <- x %>% 
     filter(Question == "Per capita alcohol consumption among persons aged >= 14 years") %>%
     mutate(DataValue = as.numeric(DataValue))
@@ -76,9 +78,11 @@ function(input, output, session) {
       arrange(desc(DataValue))
     year_2 <- year_data$year_2 %>% 
       arrange(desc(DataValue))
+    
     nat_avg_1 <- filter(year_1, LocationDesc == "United States")$DataValue
     nat_avg_2 <- filter(year_2, LocationDesc == "United States")$DataValue
     intercept <- year_1$LocationDesc[35]
+    
     full_bar <- pcac_full %>%
       filter(YearStart == input$year_one_1) %>% 
       filter(!is.na(DataValue)) %>% 
@@ -97,9 +101,11 @@ function(input, output, session) {
       arrange(desc(DataValue))
     year_2 <- year_data$year_2 %>% 
       arrange(desc(DataValue))
+    
     nat_avg_1 <- filter(year_1, LocationDesc == "United States")$DataValue
     nat_avg_2 <- filter(year_2, LocationDesc == "United States")$DataValue
     intercept <- year_2$LocationDesc[35]
+    
     full_bar <- pcac_full %>%
       filter(YearStart == input$year_two_1) %>% 
       filter(!is.na(DataValue)) %>% 
@@ -115,6 +121,7 @@ function(input, output, session) {
   output$pcac_comparison_bar <- renderPlot({
     diff_data <- pcac_diff_reactive() %>% 
       arrange(desc(diff))
+    
     intercept <- diff_data$LocationDesc[40]
     val <- round(filter(diff_data, LocationDesc == input$state_1)$diff, 4)
     
@@ -155,7 +162,7 @@ function(input, output, session) {
            round(diff_value / eth, 2), " additional standard drinks consumed per person in ", input$year_two_1, " compared to ", input$year_one_1, ".")
   })
   
-  # Code for 2nd tab
+  # Code for auay tab
   stratification_values_2 <- reactive({
     filtered_values <- x[x$StratificationCategory1 == input$stratification_category_2, ]
     return(unique(filtered_values$Stratification1))
@@ -174,37 +181,108 @@ function(input, output, session) {
     return(df_state)
   })
   
-  output$auay_scatterPlot <- renderPlotly({
-    df_for_plot <- filtered_data_1()
+  output$auay_linePlot <- renderPlotly({
+    df_selected_state <- filtered_data_1()
     
-    if (is.null(df_for_plot)) {
-      return(NULL)
+    df_all_states <- x[x$Question == "Alcohol use among youth" &
+                         x$StratificationCategory1 == input$stratification_category_2 &
+                         x$Stratification1 == input$stratification_2 &
+                         !is.na(x$DataValueAlt), ]
+    
+    max_val <- max(df_all_states$DataValueAlt, na.rm = TRUE)
+    
+    if (is.null(df_selected_state) || nrow(df_selected_state) == 0) {
+      plot <- ggplot() +
+        geom_line(data = df_all_states, aes(x = YearStart, y = DataValueAlt, group = LocationDesc), color = "grey", alpha = 0.2) +
+        geom_point(data = df_all_states, aes(x = YearStart, y = DataValueAlt, group = LocationDesc), color = "grey", alpha = 0.2) +
+        labs(title = paste("Alcohol usage among youth by (odd) years for", input$stratification_2),
+             x = "Year",
+             y = "Alcohol usage among youth (Crude Prevalence %)") +
+        theme_minimal() +
+        scale_x_continuous(breaks = c(2013, 2015, 2017, 2019)) +
+        scale_y_continuous(limits = c(0, max_val))
+    } else {
+      plot <- ggplot() +
+        geom_line(data = df_all_states, aes(x = YearStart, y = DataValueAlt, group = LocationDesc), color = "grey", alpha = 0.2) +
+        geom_point(data = df_all_states, aes(x = YearStart, y = DataValueAlt, group = LocationDesc), color = "grey", alpha = 0.2) +
+        geom_line(data = df_selected_state, aes(x = YearStart, y = DataValueAlt), color = "blue", size = 1) +
+        geom_point(data = df_selected_state, aes(x = YearStart, y = DataValueAlt),  color = "blue", size = 3) +
+        labs(title = paste("Alcohol usage among youth by (odd) years in", input$state_2, "for", input$stratification_2),
+             x = "Year",
+             y = "Alcohol usage among youth (Crude Prevalence %)") +
+        theme_minimal() +
+        scale_x_continuous(breaks = c(2013, 2015, 2017, 2019)) +
+        scale_y_continuous(limits = c(0, max_val))
     }
     
-    max_val <- max(df_for_plot$DataValueAlt, na.rm = TRUE)
-    
-    plot <- ggplot(df_for_plot, aes(x = YearStart, y = DataValueAlt)) +
-      geom_bar(stat = "identity") +
-      labs(title = paste("Alcohol usage among youth by year in", input$state_2),
-           x = "Year",
-           y = "Alcohol usage among youth (Crude Prevalence)") +
-      theme_minimal() +
-      scale_y_continuous(limits = c(0, max_val))
-    
     if (input$trendline_2) {
-      plot <- plot + geom_smooth(method = "lm", color = "red", se = FALSE)
+      plot <- plot +
+        geom_line(data = filter(df_all_states, LocationDesc == "United States"), aes(x = YearStart, y = DataValueAlt), color = "red", size = 1) +
+        geom_point(data = filter(df_all_states, LocationDesc == "United States"), aes(x = YearStart, y = DataValueAlt), color = "red", size = 3)
     }
     
     ggplotly(plot) %>%
-      layout(
-        hoverlabel = list(
-          bgcolor = "white", 
-          font = list(color = "black")
-        )
-      )
+      layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
   })
   
-  # Code for 3rd tab
+  output$auay_summary <- renderText({
+    if (sum(is.na(filter(x, Question == "Alcohol use among youth",
+                         StratificationCategory1 == input$stratification_category_2,
+                         Stratification1 == input$stratification_2,
+                         LocationDesc == input$state_2)$DataValueAlt)) == nrow(filter(x, Question == "Alcohol use among youth",
+                                                                                      StratificationCategory1 == input$stratification_category_2,
+                                                                                      Stratification1 == input$stratification_2,
+                                                                                      LocationDesc == input$state_2))) {
+      return("Unfortunately no data values were in the original dataset for the specified state, data type, and stratification.")
+    }
+    
+    df_for_plot <- filtered_data_1()
+    df_for_plot <- df_for_plot %>% 
+      mutate(DataValue = as.numeric(DataValue)) %>% 
+      arrange(YearStart)
+    
+    summary_message <- "Note: The only years recorded are 2013, 2015, 2017, and 2019, with some states containing only a subset of these years depending on the stratification."
+    
+    for (i in 1:nrow(df_for_plot)) {
+      val <- df_for_plot$DataValue[i]
+      
+      summary_message <- paste0(summary_message, "<br><br>Year (", df_for_plot$YearStart[i], "):<br> Crude Prevalence of Alcohol Usage Among Youth = ",
+                                round(val, 4), "%")
+    }
+    
+    summary_message <- paste0(summary_message, "<br><br>", "Any years that are not listed were not provided by the original dataset.")
+    
+    HTML(summary_message)
+  })
+  
+  output$us_summary <- renderText({
+    us_data <- filter(x, Question == "Alcohol use among youth",
+                      StratificationCategory1 == input$stratification_category_2,
+                      Stratification1 == input$stratification_2,
+                      LocationDesc == "United States")
+    
+    if (sum(is.na(us_data$DataValueAlt)) == nrow(us_data)) {
+      return("Unfortunately, no data values are available for the United States. Here is an empty graph!")
+    }
+    
+    us_data <- us_data %>%
+      mutate(DataValue = as.numeric(DataValue)) %>%
+      arrange(YearStart)
+    
+    summary_message <- "Note: The only years recorded for the United States are 2013, 2015, 2017, and 2019, with some years potentially missing depending on the stratification."
+    
+    for (i in 1:nrow(us_data)) {
+      val <- us_data$DataValue[i]
+      summary_message <- paste0(summary_message, "<br><br>Year (", us_data$YearStart[i], "):<br> Crude Prevalence of Alcohol Usage Among Youth = ",
+                                round(val, 4), "%")
+    }
+    
+    summary_message <- paste0(summary_message, "<br><br>", "Any years that are not listed were not provided by the original dataset.")
+    
+    HTML(summary_message)
+  })
+  
+  # Code for csar tab
   stratification_values_3 <- reactive({
     filtered_values <- x[x$StratificationCategory1 == input$stratification_category_3, ]
     unique(filtered_values$Stratification1)
@@ -217,7 +295,7 @@ function(input, output, session) {
   filtered_data <- reactive({
     df_year <- x[x$YearStart == input$year_3, ]
     
-    df_year_cldm <- df_year[df_year$Question == "Chronic liver disease mortality" & 
+    df_year_csar <- df_year[df_year$Question == "Chronic liver disease mortality" & 
                               df_year$DataValueType == input$data_type_3 & 
                               df_year$StratificationCategory1 == input$stratification_category_3 &
                               df_year$Stratification1 == input$stratification_3, ]
@@ -229,10 +307,10 @@ function(input, output, session) {
     
     result_df <- df_regulation %>%
       select(YearStart, LocationDesc, DataValue) %>%
-      left_join(df_year_cldm %>% select(YearStart, LocationDesc, DataValueAlt), 
+      left_join(df_year_csar %>% select(YearStart, LocationDesc, DataValueAlt), 
                 by = c("LocationDesc")) %>%
       rename(DataValue_regulation = DataValue, 
-             DataValue_cldm = DataValueAlt)
+             Chronic_Liver_Disease_Mort = DataValueAlt)
     
     if (nrow(result_df) == 0) {
       return(NULL)
@@ -248,91 +326,115 @@ function(input, output, session) {
     )
     
     result_df <- result_df %>%
-      mutate(CategoryNumber = category_mapping[DataValue_regulation])
+      mutate(Category_Number = category_mapping[DataValue_regulation])
     
     return(result_df)
   })
   
-  output$cldm_scatterPlot <- renderPlotly({
+  output$csar_plot <- renderPlotly({
     df_for_plot <- filtered_data()
     
-    if (is.null(df_for_plot)) {
+    if (nrow(x %>% filter(DataValueType == input$data_type_3,
+                          StratificationCategory1 == input$stratification_category_3,
+                          Stratification1 == input$stratification_3)) == 0) {
       return(NULL)
     }
     
-    plot <- ggplot(df_for_plot, aes(x = CategoryNumber, y = DataValue_cldm, text = LocationDesc)) +
-      geom_point(size = 1) +
-      labs(title = paste("Chronic Liver Disease Mortality by Category in", input$year_3),
-           x = "Category of State Alcohol Regulation",
-           y = paste(input$data_type_3, "for Chronic Liver Disease Mortality (cases per 100000)")) +
-      scale_y_continuous(limits = c(0, max(df_for_plot$DataValue_cldm))) +
-      scale_x_continuous(breaks = 1:6) +
-      theme(axis.title.y = element_text(size = 8))
-    
-    if (input$trendline_3) {
-      mean_data <- df_for_plot %>%
-        group_by(CategoryNumber) %>%
-        summarize(mean = mean(DataValue_cldm, na.rm = TRUE), LocDesc = LocationDesc)
+    if (input$plot_3 == "Scatterplot") {
+      plot <- ggplot(df_for_plot, aes(x = Category_Number, y = Chronic_Liver_Disease_Mort, text = LocationDesc)) +
+        geom_point(size = 1) +
+        labs(title = paste("Scatterplot of Chronic Liver Disease Mortality by Category in", input$year_3, "for", input$stratification_3),
+             x = "Category of State Alcohol Regulation",
+             y = paste(input$data_type_3, "for Chronic Liver Disease Mortality (cases per 100000)")) +
+        scale_y_continuous(limits = c(0, max(df_for_plot$Chronic_Liver_Disease_Mort))) +
+        scale_x_continuous(breaks = 1:6) +
+        theme(axis.title.y = element_text(size = 8))
       
-      plot <- plot + geom_line(data = mean_data, aes(x = CategoryNumber, y = mean), inherit.aes = FALSE, color = "red", size = 1)
+      if (input$trendline_3) {
+        mean_data <- df_for_plot %>%
+          group_by(Category_Number) %>%
+          summarize(mean = mean(Chronic_Liver_Disease_Mort, na.rm = TRUE), LocDesc = LocationDesc)
+        
+        plot <- plot + geom_line(data = mean_data, aes(x = Category_Number, y = mean), inherit.aes = FALSE, color = "red", size = 1)
+      }
+      
+      ggplotly(plot) %>%
+        layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
+    } else {
+      num_categories <- length(unique(df_for_plot$Category_Number))
+      colors <- colorRampPalette(c("yellow", "red"))(num_categories)
+      
+      plot <- ggplot(df_for_plot, aes(x = as.factor(Category_Number), y = Chronic_Liver_Disease_Mort, fill = as.factor(Category_Number))) +
+        geom_boxplot() +
+        labs(title = paste("Boxplot of Chronic Liver Disease Mortality by Category in", input$year_3, "for", input$stratification_3),
+             x = "Category of State Alcohol Regulation",
+             y = paste(input$data_type_3, "for Chronic Liver Disease Mortality (cases per 100000)")) +
+        scale_y_continuous(limits = c(0, max(df_for_plot$Chronic_Liver_Disease_Mort, na.rm = TRUE))) +
+        scale_fill_manual(values = colors) +
+        theme(axis.title.y = element_text(size = 8), legend.position = "none")
+      
+      if (input$trendline_3) {
+        median_data <- df_for_plot %>%
+          group_by(Category_Number) %>%
+          summarize(median = median(Chronic_Liver_Disease_Mort, na.rm = TRUE), LocDesc = LocationDesc)
+        
+        plot <- plot + geom_line(data = median_data, aes(x = Category_Number, y = median), inherit.aes = FALSE, color = "black", size = 1, linetype = "dashed")
+      }
+      
+      ggplotly(plot) %>%
+        layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
     }
-    
-    ggplotly(plot) %>%
-      layout(
-        hoverlabel = list(
-          bgcolor = "white", 
-          font = list(color = "black")
-        )
-      )
   })
   
-  output$cat <- renderUI({
+  output$cat_1 <- renderUI({
+    mssg <- paste0("Category 1 - State had exclusive local alcohol retail licensing", "<br><br>",
+                   "Category 2 - State had joint local and state alcohol retail licensing", "<br><br>",
+                   "Category 3 - State had exclusive state alcohol retail licensing but with local zoning authority", "<br><br>",
+                   "Category 4 - State had mixed alcohol retail licensing policies", "<br><br>",
+                   "Category 5 - State had nearly exclusive state alcohol retail licensing", "<br><br>",
+                   "Category 6 - State had exclusive state alcohol retail licensing")
+    HTML(mssg)
+  })
+  
+  output$cat_2 <- renderUI({
     if (nrow(x %>% filter(DataValueType == input$data_type_3,
                      StratificationCategory1 == input$stratification_category_3,
                      Stratification1 == input$stratification_3)) == 0) {
-      return("No data values meet the restrictions! Empty graph!")
+      return("Unfortunately no data values were in the original dataset for the specified year, data type, and stratification. Here is an empty graph!")
     }
     
     df_for_plot <- filtered_data()
     mean_data <- df_for_plot %>%
-      group_by(CategoryNumber) %>%
-      summarize(mean_cldm = mean(DataValue_cldm, na.rm = TRUE))
+      group_by(Category_Number) %>%
+      summarize(mean_csar = mean(Chronic_Liver_Disease_Mort, na.rm = TRUE))
     
-    if (sum(is.na(mean_data$mean_cldm)) > 0) {
+    if (sum(is.na(mean_data$mean_csar)) > 0) {
       return("There is no state data for certain categories, resulting in discontinuous trendlines.")
     }
     
-    summary_message <- "Summary of Chronic Liver Disease Mortality by Category:<br>"
+    summary_message <- ""
     
     for (i in 1:nrow(mean_data)) {
-      cat <- if (i == 1) {
-        "Category 1 - State had exclusive local alcohol retail licensing"
-      } else if (i == 2) {
-        "Category 2 - State had joint local and state alcohol retail licensing"
-      } else if (i == 3) {
-        "Category 3 - State had exclusive state alcohol retail licensing but with local zoning authority"
-      } else if (i == 4) {
-        "Category 4 - State had mixed alcohol retail licensing policies"
-      } else if (i == 5) {
-        "Category 5 - State had nearly exclusive state alcohol retail licensing"
-      } else if (i == 6) {
-        "Category 6 - State had exclusive state alcohol retail licensing"
+      mean_value <- mean_data$mean_csar[i]
+      
+      if (i != 1) {
+        summary_message <- paste0(summary_message, "<br><br>")
       }
       
-      mean_value <- mean_data$mean_cldm[i]
-      
-      interpretation <- if (mean_value < 10) {
+      interpretation <- if (mean_value < 20) {
         "This category has a relatively low mortality rate."
-      } else if (mean_value < 20) {
+      } else if (mean_value < 30) {
         "This category has a moderate mortality rate."
       } else {
         "This category has a high mortality rate."
       }
       
-      summary_message <- paste0(summary_message, "<br>", cat, ".<br>Mean Mortality Rate = ",
-                                round(mean_value, 2), "% - ", interpretation, "<br>")
+      summary_message <- paste0(summary_message, "Category ", i, ":<br> Mean Mortality Rate = ",
+                                round(mean_value, 2), " - ", interpretation)
     }
     
     HTML(summary_message)
   })
+  
+  # Code for cldm tab
 }
