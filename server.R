@@ -507,10 +507,22 @@ function(input, output, session) {
     else {
       word <- "Deaths per 100,000"
     }
+
+    mortality_range <- range(c(
+      as.numeric(filter_1(input$year_4_1)$DataValue), 
+      as.numeric(filter_1(input$year_4_2)$DataValue)
+    ), na.rm = TRUE)
+
+    gradient_scale <- scale_fill_gradient(
+      low = "yellow", 
+      high = "red2", 
+      name = word, 
+      limits = mortality_range
+    )
     
     plot <- ggplot(us_states_update) +
       geom_sf(aes(fill = Mortality, text = paste0("State: ", NAME, " <br>Mortality: ", Mortality, " <br>Year: ", y, " ")), color = "white") +
-      scale_fill_gradient(low = "yellow", high = "red2", name = word) +
+      gradient_scale +
       geom_sf(data = selected_state, aes(fill = Mortality, text = paste0("State: ", NAME, " <br>Mortality: ", Mortality, " <br>Year: ", y, " ")),
               color = "black") +
       labs(title = paste0("U.S. States Heatmap of Chronic Liver Disease Mortality in ", y)) +
