@@ -14,7 +14,7 @@ unique_states <- x$LocationDesc %>%
   unique() %>% 
   sort()
 
-header <- dashboardHeader(title = "Alcohol")
+header <- dashboardHeader(title = "Alcohol Trends")
 
 sidebar <- dashboardSidebar(
   sidebarMenu(id = "menu1",

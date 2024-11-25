@@ -12,21 +12,38 @@ library(sf)
 
 x <- read.csv("alcohol_cdi.csv")
 
-eth <- 0.0046875
+us_states <- states(cb = TRUE)
 
-filter_data <- function(data, year, state = NULL) {
-  filtered <- data %>% 
-    filter(YearStart == year, !is.na(DataValue))
-  
-  if (!is.null(state)) {
-    filtered <- filtered %>% filter(LocationDesc == state)
-  }
-  
-  return(filtered)
+reposition_states <- function(geometry) {
+  alaska <- geometry %>% filter(NAME == "Alaska")
+  hawaii <- geometry %>% filter(NAME == "Hawaii")
+  alaska <- st_geometry(alaska) * 0.35
+  alaska <- alaska + c(-65, 7)
+  hawaii <- st_geometry(hawaii) + c(50, 7)
+  mainland <- geometry %>% filter(!NAME %in% c("Alaska", "Hawaii"))
+  st_geometry(geometry[geometry$NAME == "Alaska", ]) <- alaska
+  st_geometry(geometry[geometry$NAME == "Hawaii", ]) <- hawaii
+  geometry
 }
 
+us_states_repositioned <- reposition_states(us_states)
+
+# Start of app
 function(input, output, session) {
   # Code for pcac tab
+  eth <- 0.0046875
+  
+  filter_data <- function(data, year, state = NULL) {
+    filtered <- data %>% 
+      filter(YearStart == year, !is.na(DataValue))
+    
+    if (!is.null(state)) {
+      filtered <- filtered %>% filter(LocationDesc == state)
+    }
+    
+    return(filtered)
+  }
+  
   pcac_full <- x %>% 
     filter(Question == "Per capita alcohol consumption among persons aged >= 14 years") %>%
     mutate(DataValue = as.numeric(DataValue))
@@ -470,26 +487,10 @@ function(input, output, session) {
                          df_year$Stratification1 == "Overall", ]
   }
   
-  prep_plot <- function(y) {
-    us_states <- states(cb = TRUE)
-    
+  prep_plot <- function(y, us_states_repositioned) {
     df_for_plot <- filter_1(y)
     
     df_states <- filter(df_for_plot, LocationDesc != "United States")
-    
-    reposition_states <- function(geometry) {
-      alaska <- geometry %>% filter(NAME == "Alaska")
-      hawaii <- geometry %>% filter(NAME == "Hawaii")
-      alaska <- st_geometry(alaska) * 0.35
-      alaska <- alaska + c(-65, 7)
-      hawaii <- st_geometry(hawaii) + c(50, 7)
-      mainland <- geometry %>% filter(!NAME %in% c("Alaska", "Hawaii"))
-      st_geometry(geometry[geometry$NAME == "Alaska", ]) <- alaska
-      st_geometry(geometry[geometry$NAME == "Hawaii", ]) <- hawaii
-      geometry
-    }
-    
-    us_states_repositioned <- reposition_states(us_states)
     
     us_states_update <- us_states_repositioned %>%
       right_join(df_states, by = c("NAME" = "LocationDesc"))
@@ -542,11 +543,11 @@ function(input, output, session) {
   }
   
   output$cldm_plot_1 <- renderPlotly({
-    prep_plot(input$year_4_1)
+    prep_plot(input$year_4_1, us_states_repositioned)
   })
   
   output$cldm_plot_2 <- renderPlotly({
-    prep_plot(input$year_4_2)
+    prep_plot(input$year_4_2, us_states_repositioned)
   })
   
   output$cldm_state <- renderUI({
