@@ -7,8 +7,10 @@ library(plotly)
 
 df <- read.csv("alcohol_cdi.csv")
 
+x <- filter(df, LocationDesc != "United States")
+
 # List of all territories
-unique_states <- df$LocationDesc %>% 
+unique_states <- x$LocationDesc %>% 
   unique() %>% 
   sort()
 
@@ -36,7 +38,13 @@ sidebar <- dashboardSidebar(
       selectInput("state_2", "Select State", choices = unique_states),
       selectInput("stratification_category_2", "Select Stratification Category", choices = c("Overall", "Gender", "Race/Ethnicity"), selected = "Overall"),
       selectInput("stratification_2", "Select Stratification", choices = NULL),
-      checkboxInput("trendline_2", "Show United States Average", value = FALSE)),
+      checkboxInput("trendline_2", "Show United States Average", value = TRUE)),
+    conditionalPanel(
+      condition = "input.menu1 == 'cldm'",
+      selectInput("state_4", "Select State", choices = unique_states),
+      selectInput("year_4_1", "Select Year 1", choices = c(2010:2020), selected = 2010),
+      selectInput("year_4_2", "Select Year 2", choices = c(2010:2020), selected = 2020),
+      selectInput("data_type_4", "Select Data Type", choices = c("Age-adjusted Rate", "Crude Rate", "Number"), selected = "Crude Rate")),
     conditionalPanel(
       condition = "input.menu1 == 'pcac'",
       selectInput("state_1", "State", choices = unique_states),
@@ -91,6 +99,18 @@ body <- dashboardBody(
                   status = "primary", solidHeader = TRUE, width = 6,
                   htmlOutput("cat_2")),
               box(width = 12, plotlyOutput("csar_plot"))
+            )
+    ),
+    tabItem(tabName = "cldm",
+            fluidRow(
+              box(title = "Summary of Statewide Chronic Liver Disease Mortality",
+                  status = "primary", solidHeader = TRUE, width = 6,
+                  htmlOutput("cldm_state")),
+              box(title = "Summary of United States Chronic Liver Disease Mortality",
+                  status = "primary", solidHeader = TRUE, width = 6,
+                  htmlOutput("cldm_us")),
+              box(width = 12, plotlyOutput("cldm_plot_1")),
+              box(width = 12, plotlyOutput("cldm_plot_2"))
             )
     )
   )
