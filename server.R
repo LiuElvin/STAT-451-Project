@@ -373,7 +373,8 @@ function(input, output, session) {
       if (input$trendline_3) {
         mean_data <- df_for_plot %>%
           group_by(Category) %>%
-          summarize(mean = mean(Mortality, na.rm = TRUE), LocDesc = LocationDesc)
+          summarize(mean = mean(Mortality, na.rm = TRUE)) %>%
+          filter(!is.na(mean))
         
         plot <- plot + geom_line(data = mean_data, aes(x = Category, y = mean), inherit.aes = FALSE, color = "red", size = 1)
       }
@@ -398,9 +399,10 @@ function(input, output, session) {
         if (input$trendline_3) {
           median_data <- df_for_plot %>%
             group_by(Category) %>%
-            summarize(median = median(Mortality, na.rm = TRUE), LocDesc = LocationDesc)
+            summarize(median = median(Mortality, na.rm = TRUE)) %>%
+            filter(!is.na(median))
           
-          plot <- plot + geom_line(data = median_data, aes(x = Category, y = median), inherit.aes = FALSE, color = "black", size = 1, linetype = "dashed")
+          plot <- plot + geom_line(data = median_data, aes(x = as.numeric(Category), y = median), inherit.aes = FALSE, color = "black", size = 1, linetype = "dashed")
         }
         
         ggplotly(plot) %>%
