@@ -234,11 +234,14 @@ function(input, output, session) {
     if (input$trendline_2) {
       plot <- plot +
         geom_line(data = filter(df_all_states, LocationDesc == "United States"),
-                  aes(x = YearStart, y = DataValueAlt), color = "red", size = 1) +
+                  aes(x = YearStart, y = DataValueAlt, color = "National Average"), size = 1) +
+        
         geom_point(data = filter(df_all_states, LocationDesc == "United States"),
                    aes(x = YearStart, y = DataValueAlt,
                        text = paste0("Region: United States <br>Usage: ", DataValueAlt, "% <br>Year: ", YearStart, " ")),
-                   color = "red", size = 3)
+                   color = "red", size = 3) +
+        
+        scale_color_manual(name = "", values = c("National Average" = "red")) 
     }
     
     ggplotly(plot, tooltip = "text") %>%
