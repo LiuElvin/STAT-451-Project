@@ -2,14 +2,10 @@ library(shinydashboard)
 library(tidyverse)
 library(plotly)
 
-# Data
-# df <- read.csv("U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
-
 df <- read.csv("alcohol_cdi.csv")
 
 x <- filter(df, LocationDesc != "United States")
 
-# List of all territories
 unique_states <- x$LocationDesc %>% 
   unique() %>% 
   sort()
@@ -63,7 +59,7 @@ sidebar <- dashboardSidebar(
 
 body <- dashboardBody(
   tabItems(
-    # Items in tab
+    # Items in tabs
     tabItem(tabName = "auay",
             fluidRow(
               box(title = "Summary of Statewide Youth Alcohol Use",

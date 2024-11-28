@@ -4,12 +4,6 @@ library(tigris)
 library(plotly)
 library(sf)
 
-# Old Data
-# df <- read.csv("U.S._Chronic_Disease_Indicators__CDI___2023_Release.csv")
-# alcohol <- df %>% 
-#   filter(Topic == "Alcohol") %>% 
-#   filter(!LocationDesc %in% c("District of Columbia", "Virgin Islands", "Puerto Rico", "Guam"))
-
 x <- read.csv("alcohol_cdi.csv")
 
 us_states <- states(cb = TRUE)
@@ -28,24 +22,24 @@ reposition_states <- function(geometry) {
 
 us_states_repositioned <- reposition_states(us_states)
 
-# Start of app
 function(input, output, session) {
   # Code for pcac tab
-  eth <- 0.0046875
-  
   filter_data <- function(data, year, state = NULL) {
     filtered <- data %>% 
       filter(YearStart == year, !is.na(DataValue))
     
     if (!is.null(state)) {
-      filtered <- filtered %>% filter(LocationDesc == state)
+      filtered <- filtered %>% 
+        filter(LocationDesc == state)
     }
     
     return(filtered)
   }
   
+  eth <- 0.0046875
+  
   pcac_full <- x %>% 
-    filter(Question == "Per capita alcohol consumption among persons aged >= 14 years") %>%
+    filter(Question == "Per capita alcohol consumption among persons aged >= 14 years") %>% 
     mutate(DataValue = as.numeric(DataValue))
   
   pcac_year <- reactive({
@@ -53,18 +47,20 @@ function(input, output, session) {
   })
   
   pcac_diff <- reactive({
-    merge(pcac_year()$year_1, pcac_year()$year_2, by = "LocationDesc", suffixes = c("1", "2")) %>%
+    merge(pcac_year()$year_1, pcac_year()$year_2, by = "LocationDesc", suffixes = c("1", "2")) %>% 
       mutate(diff = DataValue2 - DataValue1)
   })
   
   pcac_diff_reactive <- reactive({
-    pcac_diff() %>%
-      filter(LocationDesc != "United States") %>%
+    pcac_diff() %>% 
+      filter(LocationDesc != "United States") %>% 
       mutate(bar_color = ifelse(LocationDesc == input$state_1, "highlight", "normal"))
   })
   
   nat_avg <- reactive({
-    pcac_diff() %>% filter(LocationDesc == "United States") %>% pull(diff)
+    pcac_diff() %>% 
+      filter(LocationDesc == "United States") %>% 
+      pull(diff)
   })
   
   generate_bar_plot <- function(full_bar, year_data, year, state, nat_avg_1, nat_avg_2, focus_color) {
@@ -81,9 +77,9 @@ function(input, output, session) {
            y = "Alcohol Consumption (gallons / person)") +
       annotate(geom = "text", x = state, y = val + 0.1, label = paste0(val), color = "black", size = 10/.pt) +
       scale_y_continuous(breaks = seq(0, 5, by = 1), limits = c(0, 5)) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 10), 
+      theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 10),
             axis.text.y = element_text(size = 8),
-            axis.title.x = element_text(size = 12), 
+            axis.title.x = element_text(size = 12),
             axis.title.y = element_text(size = 12),
             plot.title = element_text(size = 12),
             legend.position = "none")
@@ -103,10 +99,10 @@ function(input, output, session) {
     
     intercept <- year_1$LocationDesc[35]
     
-    full_bar <- pcac_full %>%
+    full_bar <- pcac_full %>% 
       filter(YearStart == input$year_one_1) %>% 
       filter(!is.na(DataValue)) %>% 
-      filter(LocationDesc != "United States") %>%
+      filter(LocationDesc != "United States") %>% 
       mutate(bar_color = ifelse(LocationDesc == input$state_1, "highlight", "normal"))
     
     generate_bar_plot(full_bar, year_1, input$year_one_1, input$state_1, nat_avg_1, nat_avg_2, "red") +
@@ -129,10 +125,10 @@ function(input, output, session) {
     
     intercept <- year_2$LocationDesc[35]
     
-    full_bar <- pcac_full %>%
+    full_bar <- pcac_full %>% 
       filter(YearStart == input$year_two_1) %>% 
       filter(!is.na(DataValue)) %>% 
-      filter(LocationDesc != "United States") %>%
+      filter(LocationDesc != "United States") %>% 
       mutate(bar_color = ifelse(LocationDesc == input$state_1, "highlight", "normal"))
     
     generate_bar_plot(full_bar, year_2, input$year_two_1, input$state_1, nat_avg_1, nat_avg_2, "blue") +
@@ -154,9 +150,8 @@ function(input, output, session) {
       geom_bar(stat = "identity") +
       geom_hline(yintercept = nat_avg(), color = "purple", linetype = "dashed") +
       geom_vline(xintercept = input$state_1, color = "black", linetype = "dotted") +
-      labs(title = paste0("Change in Annual Per Capita Alcohol Consumption from ", 
-                          input$year_one_1, " to ", input$year_two_1, " Among Persons Aged >= 14 Years"),
-           x = "State", 
+      labs(title = paste0("Change in Annual Per Capita Alcohol Consumption from ", input$year_one_1, " to ", input$year_two_1, " Among Persons Aged >= 14 Years"),
+           x = "State",
            y = "Change in Alcohol Consumption (gallons / person)") +
       annotate(geom = "text", x = intercept, y = nat_avg(),
                label = paste0("Change in National Average = ", nat_avg(), " gallons / person"),
@@ -170,22 +165,26 @@ function(input, output, session) {
   })
   
   output$state_norm_summary <- renderText({
-    specific_value_1 <- filter_data(pcac_full, input$year_one_1, input$state_1) %>% pull(DataValue)
-    specific_value_2 <- filter_data(pcac_full, input$year_two_1, input$state_1) %>% pull(DataValue)
+    specific_value_1 <- filter_data(pcac_full, input$year_one_1, input$state_1) %>% 
+      pull(DataValue)
+    specific_value_2 <- filter_data(pcac_full, input$year_two_1, input$state_1) %>% 
+      pull(DataValue)
     
     paste0("In ", input$state_1, ", per capita alcohol consumption was ",
-           specific_value_1, " gallons of ethanol in ", input$year_one_1, 
-           " and ", specific_value_2, " gallons of ethanol in ", input$year_two_1, 
-           ", equivalent to approximately ", round(specific_value_1 / eth, 2), 
+           specific_value_1, " gallons of ethanol in ", input$year_one_1,
+           " and ", specific_value_2, " gallons of ethanol in ", input$year_two_1,
+           ", equivalent to approximately ", round(specific_value_1 / eth, 2),
            " and ", round(specific_value_2 / eth, 2), " standard drinks, respectively.")
   })
   
   output$state_change_summary <- renderText({
-    diff_value <- pcac_diff_reactive() %>% filter(LocationDesc == input$state_1) %>% pull(diff)
+    diff_value <- pcac_diff_reactive() %>% 
+      filter(LocationDesc == input$state_1) %>% 
+      pull(diff)
     
     paste0("From ", input$year_one_1, " to ", input$year_two_1, ", per capita alcohol consumption among persons aged 14 years and older in ",
-           input$state_1, " increased by ", round(diff_value, 4), " gallons of pure ethanol. This is equivalent to ",
-           round(diff_value / eth, 2), " additional standard drinks consumed per person in ", input$year_two_1, " compared to ", input$year_one_1, ".")
+           input$state_1, " increased by ", round(diff_value, 4), " gallons of pure ethanol. This is equivalent to ", round(diff_value / eth, 2),
+           " additional standard drinks consumed per person in ", input$year_two_1, " compared to ", input$year_one_1, ".")
   })
   
   # Code for auay tab
@@ -225,7 +224,7 @@ function(input, output, session) {
                 aes(x = YearStart, y = DataValueAlt, group = LocationDesc,
                     text = paste0("Region: ", LocationDesc, " <br>Usage: ", DataValueAlt, "% <br>Year: ", YearStart, " ")),
                 color = "grey", alpha = 0.2) +
-      geom_point(data = df_all_states, 
+      geom_point(data = df_all_states,
                  aes(x = YearStart, y = DataValueAlt, group = LocationDesc,
                      text = paste0("Region: ", LocationDesc, " <br>Usage: ", DataValueAlt, "% <br>Year: ", YearStart, " ")),
                  color = "grey", alpha = 0.2) +
@@ -251,17 +250,16 @@ function(input, output, session) {
     if (input$trendline_2) {
       plot <- plot +
         geom_line(data = filter(df_all_states, LocationDesc == "United States"),
-                  aes(x = YearStart, y = DataValueAlt, color = "National Average"), size = 1) +
-        
+                  aes(x = YearStart, y = DataValueAlt,
+                      color = "National Average"), size = 1) +
         geom_point(data = filter(df_all_states, LocationDesc == "United States"),
                    aes(x = YearStart, y = DataValueAlt,
                        text = paste0("Region: United States <br>Usage: ", DataValueAlt, "% <br>Year: ", YearStart, " ")),
                    color = "red", size = 3) +
-        
-        scale_color_manual(name = "", values = c("National Average" = "red")) 
+        scale_color_manual(name = "", values = c("National Average" = "red"))
     }
     
-    ggplotly(plot, tooltip = "text") %>%
+    ggplotly(plot, tooltip = "text") %>% 
       layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
   })
   
@@ -292,6 +290,7 @@ function(input, output, session) {
     }
     
     summary_message <- paste0(summary_message, "<br><br>", "Any years that are not listed were not provided by the original dataset.")
+    
     HTML(summary_message)
   })
   
@@ -305,8 +304,8 @@ function(input, output, session) {
       return("Unfortunately, no data values are available for the United States. Here is an empty graph!")
     }
     
-    us_data <- us_data %>%
-      mutate(DataValue = as.numeric(DataValue)) %>%
+    us_data <- us_data %>% 
+      mutate(DataValue = as.numeric(DataValue)) %>% 
       arrange(YearStart)
     
     summary_message <- "Note: The only years recorded for the United States are 2013, 2015, 2017, and 2019, with some years potentially missing depending on the stratification."
@@ -318,6 +317,7 @@ function(input, output, session) {
     }
     
     summary_message <- paste0(summary_message, "<br><br>", "Any years that are not listed were not provided by the original dataset.")
+    
     HTML(summary_message)
   })
   
@@ -334,21 +334,21 @@ function(input, output, session) {
   filtered_data <- reactive({
     df_year <- x[x$YearStart == input$year_3, ]
     
-    df_year_csar <- df_year[df_year$Question == "Chronic liver disease mortality" & 
-                              df_year$DataValueType == input$data_type_3 & 
+    df_year_csar <- df_year[df_year$Question == "Chronic liver disease mortality" &
+                              df_year$DataValueType == input$data_type_3 &
                               df_year$StratificationCategory1 == input$stratification_category_3 &
                               df_year$Stratification1 == input$stratification_3, ]
     
-    df_regulation <- x %>%
+    df_regulation <- x %>% 
       filter(YearStart == input$year_3,
-             Question == "Local authority to regulate alcohol outlet density", 
+             Question == "Local authority to regulate alcohol outlet density",
              DataValue != "")
     
-    result_df <- df_regulation %>%
-      select(YearStart, LocationDesc, DataValue) %>%
-      left_join(df_year_csar %>% select(YearStart, LocationDesc, DataValueAlt), 
-                by = c("LocationDesc")) %>%
-      rename(DataValue_regulation = DataValue, 
+    result_df <- df_regulation %>% 
+      select(YearStart, LocationDesc, DataValue) %>% 
+      left_join(df_year_csar %>% 
+                  select(YearStart, LocationDesc, DataValueAlt), by = c("LocationDesc")) %>% 
+      rename(DataValue_regulation = DataValue,
              Mortality = DataValueAlt)
     
     if (nrow(result_df) == 0) {
@@ -364,7 +364,7 @@ function(input, output, session) {
       "Category 6 - State had exclusive state alcohol retail licensing" = 6
     )
     
-    result_df <- result_df %>%
+    result_df <- result_df %>% 
       mutate(Category = category_mapping[DataValue_regulation])
   })
   
@@ -388,15 +388,15 @@ function(input, output, session) {
         theme(axis.title.y = element_text(size = 8))
       
       if (input$trendline_3) {
-        mean_data <- df_for_plot %>%
-          group_by(Category) %>%
-          summarize(mean = mean(Mortality, na.rm = TRUE)) %>%
+        mean_data <- df_for_plot %>% 
+          group_by(Category) %>% 
+          summarize(mean = mean(Mortality, na.rm = TRUE)) %>% 
           filter(!is.na(mean))
         
         plot <- plot + geom_line(data = mean_data, aes(x = Category, y = mean), inherit.aes = FALSE, color = "red", size = 1)
       }
       
-      ggplotly(plot) %>%
+      ggplotly(plot) %>% 
         layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
     }
     else {
@@ -414,9 +414,9 @@ function(input, output, session) {
           theme(axis.title.y = element_text(size = 8), legend.position = "none")
         
         if (input$trendline_3) {
-          median_data <- df_for_plot %>%
-            group_by(Category) %>%
-            summarize(median = median(Mortality, na.rm = TRUE)) %>%
+          median_data <- df_for_plot %>% 
+            group_by(Category) %>% 
+            summarize(median = median(Mortality, na.rm = TRUE)) %>% 
             filter(!is.na(median))
           
           plot <- plot + geom_line(data = median_data, aes(x = as.numeric(Category), y = median), inherit.aes = FALSE, color = "black", size = 1, linetype = "dashed")
@@ -434,6 +434,7 @@ function(input, output, session) {
                    "Category 4 - State had mixed alcohol retail licensing policies", "<br><br>",
                    "Category 5 - State had nearly exclusive state alcohol retail licensing", "<br><br>",
                    "Category 6 - State had exclusive state alcohol retail licensing")
+    
     HTML(mssg)
   })
   
@@ -446,8 +447,8 @@ function(input, output, session) {
     
     df_for_plot <- filtered_data()
     
-    mean_data <- df_for_plot %>%
-      group_by(Category) %>%
+    mean_data <- df_for_plot %>% 
+      group_by(Category) %>% 
       summarize(mean_csar = mean(Mortality, na.rm = TRUE))
     
     if (sum(is.na(mean_data$mean_csar)) > 0) {
@@ -481,8 +482,8 @@ function(input, output, session) {
   filter_1 <- function(y) {
     df_year <- x[x$YearStart == y, ]
     
-    df_cldm <- df_year[df_year$Question == "Chronic liver disease mortality" & 
-                         df_year$DataValueType == input$data_type_4 & 
+    df_cldm <- df_year[df_year$Question == "Chronic liver disease mortality" &
+                         df_year$DataValueType == input$data_type_4 &
                          df_year$StratificationCategory1 == "Overall" &
                          df_year$Stratification1 == "Overall", ]
   }
@@ -492,7 +493,7 @@ function(input, output, session) {
     
     df_states <- filter(df_for_plot, LocationDesc != "United States")
     
-    us_states_update <- us_states_repositioned %>%
+    us_states_update <- us_states_repositioned %>% 
       right_join(df_states, by = c("NAME" = "LocationDesc"))
     
     us_states_update$DataValue <- as.numeric(us_states_update$DataValue)
@@ -500,7 +501,8 @@ function(input, output, session) {
     us_states_update <- us_states_update %>% 
       rename(Mortality = DataValue)
     
-    selected_state <- us_states_update %>% filter(NAME == input$state_4)
+    selected_state <- us_states_update %>% 
+      filter(NAME == input$state_4)
     
     word <- ""
     
@@ -512,16 +514,11 @@ function(input, output, session) {
     }
 
     mortality_range <- range(c(
-      as.numeric(filter_1(input$year_4_1)$DataValue), 
-      as.numeric(filter_1(input$year_4_2)$DataValue)
-    ), na.rm = TRUE)
+      as.numeric(filter_1(input$year_4_1)$DataValue),
+      as.numeric(filter_1(input$year_4_2)$DataValue)),
+      na.rm = TRUE)
 
-    gradient_scale <- scale_fill_gradient(
-      low = "yellow", 
-      high = "red2", 
-      name = word, 
-      limits = mortality_range
-    )
+    gradient_scale <- scale_fill_gradient(low = "yellow", high = "red2", name = word, limits = mortality_range)
     
     plot <- ggplot(us_states_update) +
       geom_sf(aes(fill = Mortality, text = paste0("State: ", NAME, " <br>Mortality: ", Mortality, " <br>Year: ", y, " ")), color = "white") +
@@ -538,7 +535,7 @@ function(input, output, session) {
             plot.background = element_blank()) +
       coord_sf(xlim = c(-125, -65), ylim = c(25, 49))
       
-    ggplotly(plot, tooltip = "text") %>%
+    ggplotly(plot, tooltip = "text") %>% 
       layout(hoverlabel = list(bgcolor = "white", font = list(color = "black")))
   }
   
@@ -567,9 +564,9 @@ function(input, output, session) {
     }
     
     summary_message <- paste0(
-      "In the year ", input$year_4_1, ", the chronic liver disease mortality rate for ", input$state_4, " was ", 
+      "In the year ", input$year_4_1, ", the chronic liver disease mortality rate for ", input$state_4, " was ",
       round(sum(as.numeric(selected_state_info_1), na.rm = TRUE), 2), " ", unit, ".<br><br>",
-      "In the year ", input$year_4_2, ", the chronic liver disease mortality rate for ", input$state_4, " was ", 
+      "In the year ", input$year_4_2, ", the chronic liver disease mortality rate for ", input$state_4, " was ",
       round(sum(as.numeric(selected_state_info_2), na.rm = TRUE), 2), " ", unit, "."
     )
     
@@ -593,9 +590,9 @@ function(input, output, session) {
     }
     
     summary_message <- paste0(
-      "In the year ", input$year_4_1, ", the chronic liver disease mortality rate for the United States was ", 
+      "In the year ", input$year_4_1, ", the chronic liver disease mortality rate for the United States was ",
       round(sum(as.numeric(selected_us_info_1), na.rm = TRUE), 2), " ", unit, ".<br><br>",
-      "In the year ", input$year_4_2, ", the chronic liver disease mortality rate for the United States was ", 
+      "In the year ", input$year_4_2, ", the chronic liver disease mortality rate for the United States was ",
       round(sum(as.numeric(selected_us_info_2), na.rm = TRUE), 2), " ", unit, "."
     )
     
