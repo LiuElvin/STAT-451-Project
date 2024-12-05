@@ -598,4 +598,76 @@ function(input, output, session) {
     
     HTML(summary_message)
   })
+
+  # # mental health trends
+  # output$grand_mean_plot <- renderPlot({
+  #   # Plot grand mean
+  #   ggplot(mht_all, aes(x = YearStart, y = grand_mean)) +
+  #     geom_line(color = "blue", size = 1.2) + # Line for grand mean
+  #     geom_point(color = "blue", size = 3) +  # Points for each year
+  #     geom_text(aes(label = round(grand_mean, 2)),  # Add labels for each point
+  #               vjust = -0.5, size = 7, color = "black") +
+  #     labs(
+  #       title = "Average Mentally Unhealthy Days for Adults by Year",
+  #       x = "Year",
+  #       y = "Number of Days)"
+  #     ) +
+  #     theme_minimal() +
+  #     scale_x_continuous(breaks = seq(min(data$YearStart), max(data$YearStart), by = 1)) +
+  #     scale_y_continuous(limits = c(0, 7), breaks = seq(0, 7, by = 1)) +
+  #     theme(
+  #       plot.title = element_text(size = 22),
+  #       axis.title = element_text(size = 16),
+  #       axis.text = element_text(size = 15)
+  #     )
+  # })
+  # 
+  # observe({
+  #   req(mht_all)  # Ensure mht_all exists and is loaded
+  #   
+  #   validate(
+  #     need(nrow(mht_all) > 0, "No data available."),
+  #     need("Stratification1" %in% names(mht_all), "Stratification1 column is missing.")
+  #   )
+  #   
+  #   updateSelectInput(
+  #     session,
+  #     "selected_race",
+  #     choices = unique(as.vector(mht_all$Stratification1))  # Ensure choices is a vector
+  #   )
+  # })
+
+    # output$selected_race_plot <- renderPlotly({
+  # 
+  #   selected_data <- mht_all2() %>%
+  #     filter(Stratification1 == input$selected_race)
+  # 
+  #   test_data <- tibble(
+  #     YearStart = c(2011, 2012, 2013),
+  #     avg_value = c(4.1, 4.2, 4.3),
+  #     min_value = c(3.1, 3.2, 3.3),
+  #     max_value = c(5.1, 5.2, 5.3),
+  #     Stratification1 = "Test Group"
+  #   )
+  # 
+  #   selected_race_plot <- ggplot(selected_data, aes(x = YearStart, y = avg_value)) +
+  #     geom_line(color = "blue", size = 1.2) +
+  #     geom_ribbon(aes(ymin = min_value, ymax = max_value), alpha = 0.2, fill = "lightblue") +
+  #     geom_point(color = "darkblue", size = 2) +
+  #     labs(
+  #       title = paste("Trend for", input$selected_race),
+  #       x = "Year",
+  #       y = "Average Mentally Unhealthy Days"
+  #     ) +
+  #     theme_minimal()
+  #   
+  #   print(selected_race_plot)
+  # 
+  #   ggplotly(selected_race_plot) %>%
+  #     layout(
+  #       hoverlabel = list(bgcolor = "white", font = list(color = "black")),
+  #       title = list(text = paste("Trend for", input$selected_race), x = 0.5)
+  #     )
+  # })
+  
 }
