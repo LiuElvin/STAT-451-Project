@@ -27,8 +27,11 @@ sidebar <- dashboardSidebar(
     menuItem("State Alcohol Regulation",
              tabName = "csar",
              icon = icon("scale-balanced")),
-  
-    # Conditional sidebar
+    # menuItem("Mental Health Trends",
+    #          tabName = "mht",
+    #          icon = icon("smile")),
+    # 
+
     conditionalPanel(
       condition = "input.menu1 == 'auay'",
       selectInput("state_2", "Select State", choices = unique_states),
@@ -54,6 +57,11 @@ sidebar <- dashboardSidebar(
       selectInput("stratification_category_3", "Select Stratification Category", choices = c("Overall", "Gender", "Race/Ethnicity"), selected = "Overall"),
       selectInput("stratification_3", "Select Stratification", choices = NULL),
       checkboxInput("trendline_3", "Show Trendline", value = TRUE))
+    # conditionalPanel(
+    #   condition = "input.menu1 == 'mht'",
+    #   selectInput(
+    #     "selected_race", 
+    #     "Select Race/Ethnicity", choices = NULL))
   )
 )
 
@@ -109,6 +117,23 @@ body <- dashboardBody(
               box(width = 12, plotlyOutput("cldm_plot_2"))
             )
     )
+    #     tabItem(
+    #   tabName = "mht",
+    #   fluidRow(
+    #     box(
+    #       title = "Overall Trend in Average Mentally Unhealthy Days",
+    #       status = "primary", solidHeader = TRUE, width = 12,
+    #       plotOutput("grand_mean_plot")
+    #     )
+    #   ),
+    #   fluidRow(
+    #     box(
+    #       title = "Trends by Race",
+    #       status = "primary", solidHeader = TRUE, width = 12,
+    #       plotOutput("selected_race_plot")
+    #     )
+    #   )
+    # )
   )
 )
 
