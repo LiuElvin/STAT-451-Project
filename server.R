@@ -5,7 +5,37 @@ library(plotly)
 library(sf)
 
 x <- read.csv("alcohol_cdi.csv")
-
+# mht <- read.csv("chronic_indicator2.csv")
+# mht_race <- mht %>%
+#   group_by(LocationAbbr) %>%
+#   arrange(YearStart, LocationAbbr) %>%
+#   select(YearStart, YearEnd, LocationAbbr, LocationDesc, DataValue, Stratification1) %>%
+#   distinct() %>%
+#   mutate(DataValue = as.numeric(DataValue)) %>%
+#   na.omit()
+# 
+# mht_all <- mht_race %>%
+#   group_by(YearStart, Stratification1) %>%
+#   summarize(
+#     avg_value = mean(DataValue, na.rm = TRUE),
+#     min_value = min(DataValue, na.rm = TRUE),
+#     max_value = max(DataValue, na.rm = TRUE),
+#     .groups = "drop"
+#   ) %>%
+#   group_by(YearStart) %>%
+#   mutate(grand_mean = mean(avg_value, na.rm = TRUE)) %>% # Grand mean across races for each year
+#   ungroup()
+# 
+# mht_all2 <- reactive({
+#   mht_race %>%
+#     group_by(YearStart, Stratification1) %>%
+#     summarize(
+#       avg_value = mean(DataValue, na.rm = TRUE),
+#       min_value = min(DataValue, na.rm = TRUE),
+#       max_value = max(DataValue, na.rm = TRUE),
+#       .groups = "drop"
+#     )
+# })
 us_states <- states(cb = TRUE)
 
 reposition_states <- function(geometry) {
