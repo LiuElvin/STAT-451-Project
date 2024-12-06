@@ -643,7 +643,7 @@ function(input, output, session) {
   #       y = "Number of Days)"
   #     ) +
   #     theme_minimal() +
-  #     scale_x_continuous(breaks = seq(min(data$YearStart), max(data$YearStart), by = 1)) +
+  #     scale_x_continuous(breaks = seq(min(mht_all$YearStart), max(mht_all$YearStart), by = 1)) +
   #     scale_y_continuous(limits = c(0, 7), breaks = seq(0, 7, by = 1)) +
   #     theme(
   #       plot.title = element_text(size = 22),
